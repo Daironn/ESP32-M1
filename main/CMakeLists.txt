@@ -1,2 +1,2 @@
-idf_component_register(SRCS "ESP32-M1.cpp"
+idf_component_register(SRCS "main.cpp"
                     INCLUDE_DIRS ".")
