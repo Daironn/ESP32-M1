@@ -5,17 +5,21 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${config:idf.espIdfPath}/components/**",
-            ],      
+                "${config:idf.espIdfPathWin}/components/**",
+                "/home/dairon/esp/**"
+            ],
             "browse": {
                 "path": [
                   "${config:idf.espIdfPath}/components",
                   "${config:idf.espIdfPathWin}/components",
-                  "${workspaceFolder}"
-                ],        
+                  "${workspaceFolder}",
+                  "/home/dairon/esp/**"
+                ],
                 "limitSymbolsToIncludedHeaders": false
-            },
+              },
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
             "cStandard": "c17",
             "cppStandard": "gnu++17",
             "intelliSenseMode": "linux-gcc-x64",
