@@ -20,7 +20,7 @@ extern "C" void app_main(void)
 
     while (true)
     {
-        if(inputButton.get_button_state() == HIGH)
+        if(inputButton.get_button_state() == LOW)
         {
             blueLed.set_GPIO_state(HIGH);
         }
