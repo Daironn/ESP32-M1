@@ -4,26 +4,29 @@
 
 // Driver Fheaders
 #include "Button.h"
+#include "GPIOController.h"
 
-
-#define GPIO_BIT_MASK  ((1ULL<<GPIO_NUM_18)) 
+// RTOS
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_log.h"
 
 extern "C" void app_main(void)
 {
-    gpio_set_direction(GPIO_NUM_2, GPIO_MODE_OUTPUT);
-    gpio_set_direction(GPIO_NUM_18, GPIO_MODE_INPUT);
-    gpio_set_pull_mode(GPIO_NUM_18, GPIO_PULLUP_ONLY);
+    Button inputButton(GPIO_NUM_18);
+    GPIOController blueLed(GPIO_NUM_2);
+
+    blueLed.set_GPIO_direction(GPIO_MODE_OUTPUT);
+
     while (true)
     {
-        std::cout << gpio_get_level(GPIO_NUM_18) << "\n";
-
-        if(gpio_get_level(GPIO_NUM_18) == 0)
+        if(inputButton.get_button_state() == HIGH)
         {
-            gpio_set_level(GPIO_NUM_2, 1);
+            blueLed.set_GPIO_state(HIGH);
         }
         else
         {
-            gpio_set_level(GPIO_NUM_2, 0);
+            blueLed.set_GPIO_state(LOW);
         }
         vTaskDelay(10);
     }
