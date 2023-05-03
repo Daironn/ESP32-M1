@@ -16,7 +16,7 @@
 
 #define tag "SH1106"
 
-void i2c_master_init()
+extern "C" void i2c_master_init()
 {
 	i2c_config_t i2c_config = {
 		.mode = I2C_MODE_MASTER,
@@ -141,15 +141,7 @@ void task_sh1106_contrast(void *ignore) {
 		vTaskDelay(1/portTICK_PERIOD_MS);
 
 		contrast += direction;
-		if (contrast == 0xFF) { direction = -1; }
-		if (contrast == 0x0) { direction = 1; }
-	}
-	vTaskDelete(NULL);
-}
-
-
-void task_sh1106_display_text(const void *arg_text) {
-	char *text = (char*)arg_text;
+		if (contrast == 0xFF) { direction = -1; }task_sh1106_contrast
 	uint8_t text_len = strlen(text);
 
 	i2c_cmd_handle_t cmd;
