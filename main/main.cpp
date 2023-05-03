@@ -11,6 +11,10 @@
 #include "sh1106.h"
 #include "font8x8_basic.h"
 
+// Driver Fheaders
+#include "Button.h"
+#include "GPIOController.h"
+
 #define SDA_PIN GPIO_NUM_21
 #define SCL_PIN GPIO_NUM_22
 
@@ -73,25 +77,6 @@ void sh1106_init() {
 	i2c_cmd_link_delete(cmd);
 }
 
-void task_sh1106_display_pattern(void *ignore) {
-	i2c_cmd_handle_t cmd;
-
-	for (uint8_t i = 0; i < 8; i++) {
-		cmd = i2c_cmd_link_create();
-		i2c_master_start(cmd);
-		i2c_master_write_byte(cmd, (OLED_I2C_ADDRESS << 1) | I2C_MASTER_WRITE, true);
-		i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_CMD_SINGLE, true);
-		i2c_master_write_byte(cmd, 0xB0 | i, true);
-		i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_DATA_STREAM, true);
-		for (uint8_t j = 0; j < 132; j++) {
-			i2c_master_write_byte(cmd, 0xFF >> (j % 8), true);
-		}
-		i2c_master_stop(cmd);
-		i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
-		i2c_cmd_link_delete(cmd);
-	}
-}
-
 void task_sh1106_display_clear(void *ignore) {
 	i2c_cmd_handle_t cmd;
 
@@ -121,7 +106,6 @@ void task_sh1106_display_clear(void *ignore) {
     i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
     i2c_cmd_link_delete(cmd);
 }
-
 
 void task_sh1106_contrast(void *ignore) {
 	i2c_cmd_handle_t cmd;
@@ -161,51 +145,68 @@ void task_sh1106_display_text(const void *arg_text) {
 	i2c_master_write_byte(cmd, (OLED_I2C_ADDRESS << 1) | I2C_MASTER_WRITE, true);
 
 	i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_CMD_STREAM, true);
-	i2c_master_write_byte(cmd, 0x08, true); // reset column
+	i2c_master_write_byte(cmd, 0x08, true); 
 	i2c_master_write_byte(cmd, 0x10, true);
-	i2c_master_write_byte(cmd, 0xB0 | cur_page, true); // reset page
+	i2c_master_write_byte(cmd, 0xB0 | cur_page, true); 
 
 	i2c_master_stop(cmd);
 	i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
 	i2c_cmd_link_delete(cmd);
 
-	for (uint8_t i = 0; i < text_len; i++) {
-		if (text[i] == '\n') {
-			cmd = i2c_cmd_link_create();
-			i2c_master_start(cmd);
-			i2c_master_write_byte(cmd, (OLED_I2C_ADDRESS << 1) | I2C_MASTER_WRITE, true);
+	for (uint8_t i = 0; i < text_len; i++) 
+	{
+		cmd = i2c_cmd_link_create();
+		i2c_master_start(cmd);
+		i2c_master_write_byte(cmd, (OLED_I2C_ADDRESS << 1) | I2C_MASTER_WRITE, true);
 
+		if (text[i] == '\n') 
+		{
 			i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_CMD_STREAM, true);
-			i2c_master_write_byte(cmd, 0x08, true); // reset column
+			i2c_master_write_byte(cmd, 0x08, true); 
 			i2c_master_write_byte(cmd, 0x10, true);
-			i2c_master_write_byte(cmd, 0xB0 | ++cur_page, true); // increment page
-
-			i2c_master_stop(cmd);
-			i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
-			i2c_cmd_link_delete(cmd);
-		} else {
-			cmd = i2c_cmd_link_create();
-			i2c_master_start(cmd);
-			i2c_master_write_byte(cmd, (OLED_I2C_ADDRESS << 1) | I2C_MASTER_WRITE, true);
-
-			i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_DATA_STREAM, true);
-			i2c_master_write(cmd, font8x8_basic_tr[(uint8_t)text[i]], 8, true);
-
-			i2c_master_stop(cmd);
-			i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
-			i2c_cmd_link_delete(cmd);
+			i2c_master_write_byte(cmd, 0xB0 | ++cur_page, true); 
 		}
+		else
+		{
+			i2c_master_write_byte(cmd, OLED_CONTROL_BYTE_DATA_STREAM, true);
+			i2c_master_write(cmd, font8x8_basic_tr[(uint8_t)text[i]], 8, true);		
+		}
+
+		i2c_master_stop(cmd);
+		i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
+		i2c_cmd_link_delete(cmd);
+		
 	}
 }
 
 extern "C" void app_main(void)
 {
+
 	i2c_master_init();
 	sh1106_init();
 
-	task_sh1106_display_pattern(NULL);
 	vTaskDelay(1000/portTICK_PERIOD_MS);
 	task_sh1106_display_clear(NULL);
-    task_sh1106_display_text("WORKING!\nC++!\nVERSION!");
-	xTaskCreate(&task_sh1106_contrast, "ssid1306_contrast", 2048, NULL, 6, NULL);
+
+	// xTaskCreate(&task_sh1106_contrast, "ssid1306_contrast", 2048, NULL, 6, NULL);
+
+    Button inputButton(GPIO_NUM_18);
+    GPIOController blueLed(GPIO_NUM_2);
+
+    blueLed.set_GPIO_direction(GPIO_MODE_OUTPUT);
+
+    while (true)
+    {
+        if(inputButton.get_button_state() == LOW)
+        {
+            blueLed.set_GPIO_state(HIGH);
+			task_sh1106_display_text("WORKING!\nC++!\nVERSION!");
+        }
+        else
+        {
+            blueLed.set_GPIO_state(LOW);
+			task_sh1106_display_clear(NULL);
+        }
+        vTaskDelay(10);
+    }
 }
