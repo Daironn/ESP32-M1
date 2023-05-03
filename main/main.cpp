@@ -16,15 +16,15 @@
 
 #define tag "SH1106"
 
-extern "C" void i2c_master_init()
+void i2c_master_init()
 {
 	i2c_config_t i2c_config = {
-		.mode = I2C_MODE_MASTER,
-		.sda_io_num = SDA_PIN,
-		.scl_io_num = SCL_PIN,
-		.sda_pullup_en = GPIO_PULLUP_ENABLE,
-		.scl_pullup_en = GPIO_PULLUP_ENABLE,
-		.master.clk_speed = 1000000
+				I2C_MODE_MASTER,
+				SDA_PIN,
+				SCL_PIN,
+				GPIO_PULLUP_ENABLE,
+				GPIO_PULLUP_ENABLE,
+				1000000
 	};
 	i2c_param_config(I2C_NUM_0, &i2c_config);
 	i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
@@ -141,7 +141,15 @@ void task_sh1106_contrast(void *ignore) {
 		vTaskDelay(1/portTICK_PERIOD_MS);
 
 		contrast += direction;
-		if (contrast == 0xFF) { direction = -1; }task_sh1106_contrast
+		if (contrast == 0xFF) { direction = -1; }
+		if (contrast == 0x0) { direction = 1; }
+	}
+	vTaskDelete(NULL);
+}
+
+
+void task_sh1106_display_text(const void *arg_text) {
+	char *text = (char*)arg_text;
 	uint8_t text_len = strlen(text);
 
 	i2c_cmd_handle_t cmd;
@@ -190,8 +198,7 @@ void task_sh1106_contrast(void *ignore) {
 	}
 }
 
-
-void app_main(void)
+extern "C" void app_main(void)
 {
 	i2c_master_init();
 	sh1106_init();
@@ -199,6 +206,6 @@ void app_main(void)
 	task_sh1106_display_pattern(NULL);
 	vTaskDelay(1000/portTICK_PERIOD_MS);
 	task_sh1106_display_clear(NULL);
-    task_sh1106_display_text("BUMCFKSZ\nJEBAC\nPAPIEZA POLAKA");
+    task_sh1106_display_text("WORKING!\nC++!\nVERSION!");
 	xTaskCreate(&task_sh1106_contrast, "ssid1306_contrast", 2048, NULL, 6, NULL);
 }
