@@ -1,5 +1,5 @@
-#ifndef DISPLAY_C
-#define DISPLAY_C
+#ifndef DISPLAY_C_
+#define DISPLAY_C_
 
 #include "Display.h"
 
@@ -134,9 +134,19 @@ uint8_t font8x8_basic_tr[128][8] = {
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }    // U+007F
 };
 
+/**
 
-Display::Display(gpio_num_t a_GPIO_SDA, gpio_num_t a_GPIO_SCL):GPIO_SDA(a_GPIO_SDA),GPIO_SCL(a_GPIO_SCL) 
+    @brief Constructor for the Display class that initializes a Display object with a given set of GPIO pins.
+    @param a_GPIOS_list A DisplayGPIOS struct containing the GPIO pins for the display.
+
+*/
+Display::Display(DisplayGPIOS a_GPIOS_list):gpio_list(a_GPIOS_list)
 {
+
+    this->scroll_down_button = new Button(gpio_list.GPIO_scrollDown);
+    this->scroll_up_button = new Button(gpio_list.GPIO_ScrollUp);
+    this->confirm_button = new Button(gpio_list.GPIO_Confirm);
+
     esp_err_t ret_val_master = this->communication_Init();
     esp_err_t ret_val_hardware = this->display_Hardware_Init();
     vTaskDelay(1000/portTICK_PERIOD_MS);
@@ -152,21 +162,20 @@ Display::Display(gpio_num_t a_GPIO_SDA, gpio_num_t a_GPIO_SCL):GPIO_SDA(a_GPIO_S
 
 }
 
-void Display::restart_esp(const char * a_error_text)
-{
-		ESP_LOGE(TAG, "ESP RESTART WILL BE PERFORMED");
-        ESP_LOGE(TAG, "ESP RESTART WILL BE PERFORMED");
-        esp_restart();
-}
+/**
 
+    @brief Initializes the communication interface for the display using the I2C protocol
+
+    @return esp_err_t Returns ESP_OK if the initialization was successful, otherwise returns an error code.
+*/
 esp_err_t Display::communication_Init()
 {
     esp_err_t ret_val;
 
 	i2c_config_t i2c_config = {
 				I2C_MODE_MASTER,
-				this->GPIO_SDA,
-				this->GPIO_SCL,
+				this->gpio_list.GPIO_SDA,
+				this->gpio_list.GPIO_SCL,
 				GPIO_PULLUP_ENABLE,
 				GPIO_PULLUP_ENABLE,
 				1000000
@@ -180,6 +189,11 @@ esp_err_t Display::communication_Init()
     return ret_val;
 }
 
+/**
+    @brief Initializes hardware of the OLED display using I2C communication protocol.
+
+    @return esp_err_t Returns ESP_OK on success, or an error code otherwise.
+    */
 esp_err_t Display::display_Hardware_Init()
 {
 
@@ -220,14 +234,31 @@ esp_err_t Display::display_Hardware_Init()
     return ret_val;
 }
 
-void Display::display_Text(const char * arg_text)
+/**
+
+    @brief Displays text on the OLED display at the specified page.
+
+    @param arg_text The text to be displayed on the OLED display.
+
+    @param a_cur_page The page at which the text is to be displayed. Default value of the parameter is set to 0.
+
+    This function takes in a string of text and displays it on the OLED display.
+    The text is displayed at the specified page. If a new line character is found
+    in the text, the text is displayed on a new page below the current page.
+
+    @note This function uses the font8x8_basic_tr font to display text.
+
+    @return void
+    */
+
+void Display::display_Text(const char * arg_text, uint8_t a_cur_page)
 {
     char *text = (char*)arg_text;
 	uint8_t text_len = strlen(text);
 
-	i2c_cmd_handle_t cmd;
+    i2c_cmd_handle_t cmd;
 
-	uint8_t cur_page = 0;
+	uint8_t cur_page = a_cur_page;
 
 	cmd = i2c_cmd_link_create();
 	i2c_master_start(cmd);
@@ -268,6 +299,19 @@ void Display::display_Text(const char * arg_text)
 	}
 }
 
+/**
+
+    @brief Clears the display by filling the entire display with zeros.
+    @param none
+    This function writes zeros to every byte in the OLED display memory,
+    effectively clearing the display. It first creates a zero buffer of 132 bytes,
+    one for each column in the display plus one extra byte for padding. Then it
+    writes this buffer to every page in the display, starting at page 0 and ending
+    at page 7. Finally, it resets the column and page to the top-left corner of the
+    display by writing the appropriate control bytes.
+
+    @return void
+*/
 void Display::display_Clear()
 {
     i2c_cmd_handle_t cmd;
@@ -297,6 +341,56 @@ void Display::display_Clear()
     i2c_master_stop(cmd);
     i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
     i2c_cmd_link_delete(cmd);
+}
+
+/**
+
+    @brief Destructor for the Display class.
+    Deletes the allocated memory for scroll_down_button, scroll_up_button and confirm_button if they are not null.
+
+*/
+Display::~Display()
+{
+    if(nullptr != scroll_down_button)
+        delete scroll_down_button;
+    
+    if(nullptr != scroll_up_button)
+        delete scroll_up_button;
+
+    if(nullptr != confirm_button)
+        delete confirm_button;
+}
+
+/**
+
+    @brief Restarts the ESP32 device after logging an error message.
+    This function logs the given error message using ESP_LOGE, and then calls the esp_restart() function to restart the ESP32 device.
+    @param a_error_text The error message to log.
+
+    @return void
+    */
+void Display::restart_esp(const char * a_error_text)
+{
+		ESP_LOGE(TAG, "ERROR MSG");
+        ESP_LOGE(TAG, "ESP RESTART WILL BE PERFORMED");
+        esp_restart();
+}
+
+/**
+
+    @brief Displays the current state and GPIO pins of the buttons
+    This method prints to the standard output stream the current state and GPIO pins of the buttons.
+    Specifically, it prints the state and GPIO of the scroll down, scroll up, and confirm buttons.
+    @param none
+
+    @return void
+    */
+void Display::show_button_output() const
+{
+		std::cout << "DOWN STATE: " <<static_cast<int>(scroll_down_button->get_button_state()) << " DOWN GPIO: " <<scroll_down_button->get_button_GPIO()<< std::endl;
+		std::cout << "UP  STATE: " << static_cast<int>(scroll_up_button->get_button_state())<< "UP GPIO: " <<scroll_up_button->get_button_GPIO() << std::endl;
+		std::cout << "CONFIRM  STATE: " << static_cast<int>(confirm_button->get_button_state()) << "CONFIRM GPIO: " <<confirm_button->get_button_GPIO()<< std::endl;
+
 }
 
 #endif
