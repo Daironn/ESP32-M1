@@ -1,34 +1,31 @@
-// Library headers
-#include <stdio.h>
-#include <iostream>
+#include "esp_err.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 // Driver Fheaders
 #include "Button.h"
 #include "GPIOController.h"
-
-// RTOS
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
+#include "Display.h"
 
 extern "C" void app_main(void)
 {
+
+	bool wait = true;
+	Display display(GPIO_NUM_21, GPIO_NUM_22);
+
     Button inputButton(GPIO_NUM_18);
     GPIOController blueLed(GPIO_NUM_2);
 
     blueLed.set_GPIO_direction(GPIO_MODE_OUTPUT);
 
-    while (true)
+    while (wait)
     {
-        if(inputButton.get_button_state() == LOW)
+        if(LOW == inputButton.get_button_state())
         {
             blueLed.set_GPIO_state(HIGH);
-        }
-        else
-        {
-            blueLed.set_GPIO_state(LOW);
+			display.display_Text("WORKING!\nC++!\nVERSION!!!!!!");
+			wait = false;
         }
         vTaskDelay(10);
     }
-    
 }
