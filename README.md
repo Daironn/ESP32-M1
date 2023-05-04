@@ -5,8 +5,8 @@ The project is focused on learning new technologies while making it a fun experi
 
 This repository has been created for individuals who are struggling with ESP-IDF and need access to code examples. I hope that this will be a helpful resource for them in the future.
 
-
 ![Logo](https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Espressif_Logo.svg/2560px-Espressif_Logo.svg.png)
+
 
 ## Authors
 
@@ -22,6 +22,9 @@ Documentation will be under development here:
 
 ## Roadmap
 
-- Finishing button driver implementation
+- Add scroll menu
 
-- Adding new driver to handle LCD Display
+- Add Wi-Fi driver
+
+- Add SQL database manager driver
+
