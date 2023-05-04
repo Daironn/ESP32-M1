@@ -10,3 +10,8 @@ uint8_t Button::get_button_state() const
 {
     return gpio_get_level(GPIO_number);
 }
+
+gpio_num_t Button::get_button_GPIO() const
+{
+    return GPIO_number;
+}

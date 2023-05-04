@@ -14,4 +14,5 @@ public:
 
 public:
     uint8_t get_button_state() const;
+    gpio_num_t get_button_GPIO() const;
 };

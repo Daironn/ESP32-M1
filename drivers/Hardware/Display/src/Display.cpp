@@ -135,8 +135,13 @@ uint8_t font8x8_basic_tr[128][8] = {
 };
 
 
-Display::Display(gpio_num_t a_GPIO_SDA, gpio_num_t a_GPIO_SCL):GPIO_SDA(a_GPIO_SDA),GPIO_SCL(a_GPIO_SCL) 
+Display::Display(DisplayGPIOS a_GPIOS_list):gpio_list(a_GPIOS_list)
 {
+
+    this->scroll_down_button = new Button(gpio_list.GPIO_scrollDown);
+    this->scroll_up_button = new Button(gpio_list.GPIO_ScrollUp);
+    this->confirm_button = new Button(gpio_list.GPIO_Confirm);
+
     esp_err_t ret_val_master = this->communication_Init();
     esp_err_t ret_val_hardware = this->display_Hardware_Init();
     vTaskDelay(1000/portTICK_PERIOD_MS);
@@ -159,14 +164,21 @@ void Display::restart_esp(const char * a_error_text)
         esp_restart();
 }
 
+void Display::show_button_output() const
+{
+		std::cout << "DOWN STATE: " <<static_cast<int>(scroll_down_button->get_button_state()) << " DOWN GPIO: " <<scroll_down_button->get_button_GPIO()<< std::endl;
+		std::cout << "UP  STATE: " << static_cast<int>(scroll_up_button->get_button_state())<< "UP GPIO: " <<scroll_up_button->get_button_GPIO() << std::endl;
+		std::cout << "CONFIRM  STATE: " << static_cast<int>(confirm_button->get_button_state()) << "CONFIRM GPIO: " <<confirm_button->get_button_GPIO()<< std::endl;
+
+}
 esp_err_t Display::communication_Init()
 {
     esp_err_t ret_val;
 
 	i2c_config_t i2c_config = {
 				I2C_MODE_MASTER,
-				this->GPIO_SDA,
-				this->GPIO_SCL,
+				this->gpio_list.GPIO_SDA,
+				this->gpio_list.GPIO_SCL,
 				GPIO_PULLUP_ENABLE,
 				GPIO_PULLUP_ENABLE,
 				1000000
@@ -219,15 +231,14 @@ esp_err_t Display::display_Hardware_Init()
 
     return ret_val;
 }
-
-void Display::display_Text(const char * arg_text)
+void Display::display_Text(const char * arg_text, uint8_t a_cur_page)
 {
     char *text = (char*)arg_text;
 	uint8_t text_len = strlen(text);
 
 	i2c_cmd_handle_t cmd;
 
-	uint8_t cur_page = 0;
+	uint8_t cur_page = a_cur_page;
 
 	cmd = i2c_cmd_link_create();
 	i2c_master_start(cmd);
@@ -297,6 +308,18 @@ void Display::display_Clear()
     i2c_master_stop(cmd);
     i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
     i2c_cmd_link_delete(cmd);
+}
+
+Display::~Display()
+{
+    if(nullptr != scroll_down_button)
+        delete scroll_down_button;
+    
+    if(nullptr != scroll_up_button)
+        delete scroll_up_button;
+
+    if(nullptr != confirm_button)
+        delete confirm_button;
 }
 
 #endif
