@@ -31,5 +31,6 @@ extern "C" void app_main(void)
         vTaskDelay(10);
     }
 
-    
+        display.display_Scroll();
+        vTaskDelay(199999990);
 }

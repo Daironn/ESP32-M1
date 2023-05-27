@@ -146,6 +146,8 @@ Display::Display(DisplayGPIOS a_GPIOS_list):gpio_list(a_GPIOS_list)
     this->scroll_down_button = new Button(gpio_list.GPIO_scrollDown);
     this->scroll_up_button = new Button(gpio_list.GPIO_ScrollUp);
     this->confirm_button = new Button(gpio_list.GPIO_Confirm);
+    this->scroll = new Scroll();
+
 
     esp_err_t ret_val_master = this->communication_Init();
     esp_err_t ret_val_hardware = this->display_Hardware_Init();
@@ -250,8 +252,8 @@ esp_err_t Display::display_Hardware_Init()
 
     @return void
     */
-
-void Display::display_Text(const char * arg_text, uint8_t a_cur_page)
+template <class T>
+void Display::display_Text(T arg_text, uint8_t a_cur_page)
 {
     char *text = (char*)arg_text;
 	uint8_t text_len = strlen(text);
@@ -359,6 +361,9 @@ Display::~Display()
 
     if(nullptr != confirm_button)
         delete confirm_button;
+
+    if(nullptr != scroll)
+        delete scroll;
 }
 
 /**
@@ -393,4 +398,11 @@ void Display::show_button_output() const
 
 }
 
+void Display::display_Scroll()
+{
+    for(uint8_t page = FIRSTROW; page < LASTROW; page++)
+    {
+        this->display_Text(scroll->options[page].c_str(), page);
+    }
+}
 #endif
