@@ -17,6 +17,7 @@
 
 #include "DisplaySettings.h"
 #include "Button.h"
+#include "Scroll.h"
 
 /**
 
@@ -64,6 +65,7 @@ private:
     Button * scroll_up_button;   /**< The scroll up button. */
     Button * confirm_button;     /**< The confirm button. */
 
+    Scroll * scroll;
 private:
     /**
      * @brief Initializes the communication interface used by the display.
