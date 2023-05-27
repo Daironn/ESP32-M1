@@ -17,6 +17,7 @@
 
 #include "DisplaySettings.h"
 #include "Button.h"
+#include "Scroll.h"
 
 /**
 
@@ -39,6 +40,9 @@
 */
 #define FALSE false
 
+
+#define FIRSTROW 0
+#define LASTROW 7
 
 /**
  * @brief Contains the GPIO pin numbers used by the display.
@@ -64,6 +68,7 @@ private:
     Button * scroll_up_button;   /**< The scroll up button. */
     Button * confirm_button;     /**< The confirm button. */
 
+    Scroll * scroll;
 private:
     /**
      * @brief Initializes the communication interface used by the display.
@@ -90,12 +95,15 @@ public:
      * @param text The text to display.
      * @param a_cur_page The page to display the text on.
      */
-    void display_Text(const char *, uint8_t a_cur_page = 0);
+    template <class T>
+    void display_Text(T, uint8_t a_cur_page = 0);
 
     /**
      * @brief Clears the OLED display.
      */
     void display_Clear();
+
+    void display_Scroll();
 
 public:
     /**
