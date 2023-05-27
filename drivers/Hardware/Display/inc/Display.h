@@ -41,6 +41,9 @@
 #define FALSE false
 
 
+#define FIRSTROW 0
+#define LASTROW 7
+
 /**
  * @brief Contains the GPIO pin numbers used by the display.
  */
