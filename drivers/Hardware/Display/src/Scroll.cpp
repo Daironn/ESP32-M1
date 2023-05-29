@@ -5,9 +5,14 @@
 
 #define FIRST_INDEX 0
 
-int Scroll::getCurrentOption()
+int Scroll::getCurrentOption() const
 {
     return this->current_option;
+}
+
+int Scroll::get_option_count() const
+{
+    return this->options.size();
 }
 
 std::vector<std::string> Scroll::getOptions()
@@ -17,13 +22,13 @@ std::vector<std::string> Scroll::getOptions()
 
 void Scroll::scrollDown()
 {
-    if(current_option < options.size())
+    // if(current_option < options.size())
         this->current_option++;
 }
 
 void Scroll::scrollUp()
 {
-    if(current_option >= FIRST_INDEX)
+    // if(current_option >= FIRST_INDEX)
         this->current_option--;
 }
 #endif

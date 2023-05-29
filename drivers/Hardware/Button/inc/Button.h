@@ -21,7 +21,7 @@ public:
      * @brief Constructs a new Button instance.
      * @param gpio_num The GPIO pin number that the button is connected to.
      */
-    Button(gpio_num_t);
+    Button(gpio_num_t) noexcept;
 
     /**
      * @brief Destructs the Button instance.
@@ -35,13 +35,13 @@ public:
      * @brief Gets the current state of the button.
      * @return The current state of the button, either HIGH or LOW.
      */
-    uint8_t get_button_state() const;
+    uint8_t get_button_state() const noexcept;
 
     /**
      * @brief Gets the GPIO pin number that the button is connected to.
      * @return The GPIO pin number that the button is connected to.
      */
-    gpio_num_t get_button_GPIO() const;
+    gpio_num_t get_button_GPIO() const noexcept;
 
 private:
     gpio_num_t GPIO_number; /**< The GPIO pin number that the button is connected to. */
