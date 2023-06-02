@@ -8,6 +8,8 @@
 
 #include <iostream>
 #include <cstring>
+#include <memory>
+#include <sstream>
 
 
 #include "driver/gpio.h"
@@ -17,6 +19,7 @@
 
 #include "DisplaySettings.h"
 #include "Button.h"
+#include "Scroll.h"
 
 /**
 
@@ -40,6 +43,9 @@
 #define FALSE false
 
 
+#define FIRSTROW 0
+#define LASTROW 7
+
 /**
  * @brief Contains the GPIO pin numbers used by the display.
  */
@@ -60,10 +66,11 @@ class Display
 private:
     DisplayGPIOS gpio_list;     /**< The GPIO pin numbers used by the display. */
 
-    Button * scroll_down_button; /**< The scroll down button. */
-    Button * scroll_up_button;   /**< The scroll up button. */
-    Button * confirm_button;     /**< The confirm button. */
+    std::unique_ptr<Button> scroll_down_button; /**< The scroll down button. */
+    std::unique_ptr<Button> scroll_up_button;   /**< The scroll up button. */
+    std::unique_ptr<Button> confirm_button;     /**< The confirm button. */
 
+    std::unique_ptr<Scroll> scroll;
 private:
     /**
      * @brief Initializes the communication interface used by the display.
@@ -82,7 +89,7 @@ private:
      * @brief Restarts the ESP.
      * @param msg A message to display before the ESP restarts.
      */
-    void restart_esp(const char *);
+    void restart_esp(const char *) const noexcept;
 
 public:
     /**
@@ -90,12 +97,17 @@ public:
      * @param text The text to display.
      * @param a_cur_page The page to display the text on.
      */
-    void display_Text(const char *, uint8_t a_cur_page = 0);
+    template <class T>
+    void display_Text(T, uint8_t a_cur_page = 0);
 
     /**
      * @brief Clears the OLED display.
      */
     void display_Clear();
+
+
+    int cut_index_helper(int pag, int IDX);
+    void display_Scroll();
 
 public:
     /**
@@ -107,13 +119,22 @@ public:
     /**
      * @brief Destroys the Display instance.
      */
-    ~Display();
+    ~Display() = default;
 
 public:
     /**
      * @brief Shows the output of the buttons on the OLED display.
      */
-    void show_button_output() const;
+    void show_button_output() const noexcept;
+
+    void scroll_up();
+    void scroll_down();
+    void action_confirm();
+public:
+
+    bool is_scroll_down_pressed () const noexcept;
+    bool is_scroll_up_pressed () const noexcept;
+    bool is_confirm_pressed () const noexcept;
 };
 
 #endif
