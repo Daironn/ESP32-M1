@@ -36,7 +36,7 @@ public:
      * @brief Constructs a new GPIOController instance.
      * @param gpio_num The GPIO pin number to control.
      */
-    GPIOController(gpio_num_t);
+    GPIOController(gpio_num_t) noexcept;
 
     /**
      * @brief Destructs the GPIOController instance.
@@ -50,26 +50,26 @@ public:
      * @brief Gets the current state of the GPIO pin.
      * @return The current state of the GPIO pin, either HIGH or LOW.
      */
-    uint8_t get_GPIO_state() const;
+    uint8_t get_GPIO_state() const noexcept;
 
     /**
      * @brief Gets the direction of the GPIO pin.
      * @return The direction of the GPIO pin, either GPIO_MODE_INPUT or GPIO_MODE_OUTPUT.
      */
-    gpio_mode_t get_GPIO_direction() const;
+    gpio_mode_t get_GPIO_direction() const noexcept;
     
 public:
     /**
      * @brief Sets the state of the GPIO pin.
      * @param state The state to set the GPIO pin to, either HIGH or LOW.
      */
-    void set_GPIO_state(uint8_t state);
+    void set_GPIO_state(uint8_t state) noexcept;
 
     /**
      * @brief Sets the direction of the GPIO pin.
      * @param direction The direction to set the GPIO pin to, either GPIO_MODE_INPUT or GPIO_MODE_OUTPUT.
      */
-    void set_GPIO_direction(gpio_mode_t);
+    void set_GPIO_direction(gpio_mode_t) noexcept;
 };
 
 #endif

@@ -2,6 +2,7 @@
 #define DISPLAY_C_
 
 #include "Display.h"
+#include <memory>
 
 uint8_t font8x8_basic_tr[128][8] = {
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },   // U+0000 (nul)
@@ -91,6 +92,7 @@ uint8_t font8x8_basic_tr[128][8] = {
     { 0x03, 0x41, 0x7F, 0x7F, 0x41, 0x03, 0x00, 0x00 },   // U+0054 (T)
     { 0x7F, 0x7F, 0x40, 0x40, 0x7F, 0x7F, 0x00, 0x00 },   // U+0055 (U)
     { 0x1F, 0x3F, 0x60, 0x60, 0x3F, 0x1F, 0x00, 0x00 },   // U+0056 (V)
+                    
     { 0x7F, 0x7F, 0x30, 0x18, 0x30, 0x7F, 0x7F, 0x00 },   // U+0057 (W)
     { 0x43, 0x67, 0x3C, 0x18, 0x3C, 0x67, 0x43, 0x00 },   // U+0058 (X)
     { 0x07, 0x4F, 0x78, 0x78, 0x4F, 0x07, 0x00, 0x00 },   // U+0059 (Y)
@@ -143,10 +145,10 @@ uint8_t font8x8_basic_tr[128][8] = {
 Display::Display(DisplayGPIOS a_GPIOS_list):gpio_list(a_GPIOS_list)
 {
 
-    this->scroll_down_button = new Button(gpio_list.GPIO_scrollDown);
-    this->scroll_up_button = new Button(gpio_list.GPIO_ScrollUp);
-    this->confirm_button = new Button(gpio_list.GPIO_Confirm);
-    this->scroll = new Scroll();
+    this->scroll_down_button = std::make_unique<Button>(gpio_list.GPIO_scrollDown);
+    this->scroll_up_button = std::make_unique<Button>(gpio_list.GPIO_ScrollUp);
+    this->confirm_button = std::make_unique<Button>(gpio_list.GPIO_Confirm);
+    this->scroll = std::make_unique<Scroll>();
 
 
     esp_err_t ret_val_master = this->communication_Init();
@@ -347,34 +349,13 @@ void Display::display_Clear()
 
 /**
 
-    @brief Destructor for the Display class.
-    Deletes the allocated memory for scroll_down_button, scroll_up_button and confirm_button if they are not null.
-
-*/
-Display::~Display()
-{
-    if(nullptr != scroll_down_button)
-        delete scroll_down_button;
-    
-    if(nullptr != scroll_up_button)
-        delete scroll_up_button;
-
-    if(nullptr != confirm_button)
-        delete confirm_button;
-
-    if(nullptr != scroll)
-        delete scroll;
-}
-
-/**
-
     @brief Restarts the ESP32 device after logging an error message.
     This function logs the given error message using ESP_LOGE, and then calls the esp_restart() function to restart the ESP32 device.
     @param a_error_text The error message to log.
 
     @return void
     */
-void Display::restart_esp(const char * a_error_text)
+void Display::restart_esp(const char * a_error_text) const noexcept
 {
 		ESP_LOGE(TAG, "ERROR MSG");
         ESP_LOGE(TAG, "ESP RESTART WILL BE PERFORMED");
@@ -390,7 +371,7 @@ void Display::restart_esp(const char * a_error_text)
 
     @return void
     */
-void Display::show_button_output() const
+void Display::show_button_output() const noexcept
 {
 		std::cout << "DOWN STATE: " <<static_cast<int>(scroll_down_button->get_button_state()) << " DOWN GPIO: " <<scroll_down_button->get_button_GPIO()<< std::endl;
 		std::cout << "UP  STATE: " << static_cast<int>(scroll_up_button->get_button_state())<< "UP GPIO: " <<scroll_up_button->get_button_GPIO() << std::endl;
@@ -398,11 +379,50 @@ void Display::show_button_output() const
 
 }
 
+int Display::cut_index_helper(int pag, int IDX = 0)
+{
+    return abs((pag + IDX) % scroll->get_option_count()); //TODO: Handle negative values properly
+}
+
 void Display::display_Scroll()
 {
     for(uint8_t page = FIRSTROW; page < LASTROW; page++)
     {
-        this->display_Text(scroll->options[page].c_str(), page);
+        this->display_Text(scroll->options[cut_index_helper(page, scroll->getCurrentOption())].c_str(), page);
     }
 }
+
+void Display::scroll_up()
+{
+    scroll->scrollUp();
+}
+
+void Display::scroll_down()
+{
+    scroll->scrollDown();
+}
+
+void Display::action_confirm()
+{
+    std::stringstream action_mess;
+
+    action_mess << "Number: " << cut_index_helper(scroll->getCurrentOption());
+    this->display_Text(action_mess.str().c_str());
+}
+
+bool Display::is_scroll_down_pressed () const noexcept
+{
+    return scroll_down_button->get_button_state() != HIGH;
+}
+
+bool Display::is_scroll_up_pressed () const noexcept
+{
+    return scroll_up_button->get_button_state() != HIGH;
+}
+
+bool Display::is_confirm_pressed () const noexcept
+{
+    return confirm_button->get_button_state() != HIGH;
+}
+
 #endif
