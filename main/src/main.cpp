@@ -1,54 +1,46 @@
 #include "main.h"
 
+#include "esp_event_loop.h"
+#include "esp_wifi.h"
+#include "nvs_flash.h"
+
+
+void scan()
+{
+    wifi_scan_config_t scan_config =
+    {
+        .ssid = 0,
+        .bssid = 0,
+        .channel = 0,
+        .show_hidden = TRUE
+    };
+    
+    esp_wifi_scan_start(&scan_config, true);
+
+    uint16_t ap_num;
+    wifi_ap_record_t ap_records[20];
+    esp_wifi_scan_get_ap_records(&ap_num, ap_records);
+    std::cout << "Scanned wifis: \n";
+    for(uint i =0; i < ap_num; i++)
+    {
+        std::cout << "ID"<< i << "\n";
+        std::cout << ap_records[i].ssid;
+    }   
+}
+
 extern "C" void app_main(void)
 {
+    ESP_ERROR_CHECK(nvs_flash_init());
+    tcpip_adapter_init();
 
-	bool wait = true;
-	Display display({GPIO_NUM_21, GPIO_NUM_22, GPIO_NUM_16, GPIO_NUM_17, GPIO_NUM_4});
+    wifi_init_config_t wifi_config = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
 
-    Button inputButton(GPIO_NUM_18);
-    GPIOController blueLed(GPIO_NUM_2);
-
-    blueLed.set_GPIO_direction(GPIO_MODE_OUTPUT);
-
-	display.display_Text("Press button\n to start : )");
-
-    while (wait)
-    {
-        if(LOW == inputButton.get_button_state())
-        {
-            blueLed.set_GPIO_state(HIGH);
-            display.display_Clear();
-			wait = false;
-        }
-        vTaskDelay(10);
-    }
-
-    display.display_Scroll();
-    
-    while (true)
-    {
-        if(display.is_scroll_down_pressed())
-        {
-            display.scroll_down();
-            display.display_Clear();
-            display.display_Scroll();
-        }
-        else if(display.is_scroll_up_pressed())
-        {
-            display.scroll_up();
-            display.display_Clear();
-            display.display_Scroll();
-        }
-        else if(display.is_confirm_pressed())
-        {
-            display.display_Clear();
-            display.action_confirm();
-        }
-
-        // display.show_button_output();
-        vTaskDelay(10);
-    }
-    
-
+  // while (1)
+  // {
+     // vTaskDelay(3000 / 10);
+    scan();
+  // }
+  
 }
