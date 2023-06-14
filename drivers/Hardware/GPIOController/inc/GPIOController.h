@@ -36,7 +36,7 @@ public:
      * @brief Constructs a new GPIOController instance.
      * @param gpio_num The GPIO pin number to control.
      */
-    GPIOController(gpio_num_t) noexcept;
+    explicit GPIOController(gpio_num_t) noexcept;
 
     /**
      * @brief Destructs the GPIOController instance.

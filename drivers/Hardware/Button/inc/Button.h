@@ -21,7 +21,7 @@ public:
      * @brief Constructs a new Button instance.
      * @param gpio_num The GPIO pin number that the button is connected to.
      */
-    Button(gpio_num_t) noexcept;
+    explicit Button(gpio_num_t) noexcept;
 
     /**
      * @brief Destructs the Button instance.

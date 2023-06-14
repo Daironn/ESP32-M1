@@ -24,8 +24,6 @@ extern "C" void app_main(void)
         vTaskDelay(10);
     }
 
-
-    wait = true;
     display.display_Scroll();
     
     while (true)
@@ -47,8 +45,6 @@ extern "C" void app_main(void)
             display.display_Clear();
             display.action_confirm();
         }
-
-
 
         // display.show_button_output();
         vTaskDelay(10);

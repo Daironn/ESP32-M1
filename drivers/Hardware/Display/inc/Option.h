@@ -15,8 +15,8 @@ public:
     std::string getText() {return text;}
 
 public:
-    Option(std::string a_text): text(a_text){};
-    virtual ~Option();
+    Option(const std::string & a_text): text(a_text){};
+    virtual ~Option() = default;
 };
 
 #endif
