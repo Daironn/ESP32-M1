@@ -4,7 +4,8 @@
 #include "esp_wifi.h"
 #include "nvs_flash.h"
 
-
+#define  STA_SSID "TEST"
+#define  STA_PASS "TEST"
 void scan()
 {
     wifi_scan_config_t scan_config =
@@ -35,12 +36,29 @@ extern "C" void app_main(void)
 
     wifi_init_config_t wifi_config = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&wifi_config));
+
+    // scan();
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+
+    wifi_config_t sta_config =
+    {
+        .sta =
+        {
+            STA_SSID,STA_PASS
+        },
+    };
+
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &sta_config));
+
+
     ESP_ERROR_CHECK(esp_wifi_start());
+    ESP_ERROR_CHECK(esp_wifi_connect());
 
   // while (1)
   // {
-     // vTaskDelay(3000 / 10);
-    scan();
+     // 
+
   // }
-  
+    ESP_ERROR_CHECK(esp_wifi_disconnect());
 }
