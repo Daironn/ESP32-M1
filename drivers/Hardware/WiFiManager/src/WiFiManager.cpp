@@ -1,15 +1,8 @@
 #include "WiFiManager.h"
-
+#include <iostream>
 // Wifi statics
-char                Wifi::mac_addr_cstr[]{};    ///< Buffer to hold MAC as cstring
-std::mutex          Wifi::connect_mutx{};       ///< Connect mutex
-std::mutex          Wifi::state_mutx{};   ///< State change mutex
-Wifi::state_e       Wifi::_state{state_e::NOT_INITIALISED};
-wifi_init_config_t  Wifi::wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
-wifi_config_t       Wifi::wifi_config{};
 
-
-void Wifi::event_handler(void* arg, esp_event_base_t event_base,
+void WiFiManager::event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
     if (WIFI_EVENT == event_base)
@@ -26,7 +19,7 @@ void Wifi::event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-void Wifi::wifi_event_handler(void* arg, esp_event_base_t event_base,
+void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
     if (WIFI_EVENT == event_base)
@@ -56,7 +49,7 @@ void Wifi::wifi_event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-void Wifi::ip_event_handler(void* arg, esp_event_base_t event_base,
+void WiFiManager::ip_event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
     if (IP_EVENT == event_base)
@@ -88,12 +81,12 @@ void Wifi::ip_event_handler(void* arg, esp_event_base_t event_base,
 
 
 
-esp_err_t Wifi::init(void)
+esp_err_t WiFiManager::init(void)
 {
     return _init();
 }
 
-esp_err_t Wifi::begin(void)
+esp_err_t WiFiManager::begin(void)
 {
     std::lock_guard<std::mutex> connect_guard(connect_mutx);
     esp_err_t status{ESP_OK};
@@ -123,7 +116,7 @@ esp_err_t Wifi::begin(void)
     return status;
 }
 
-esp_err_t Wifi::_init(void)
+esp_err_t WiFiManager::_init(void)
 {
     std::lock_guard<std::mutex> init_guard(init_mutx);
 
@@ -131,43 +124,53 @@ esp_err_t Wifi::_init(void)
 
     std::lock_guard<std::mutex> state_guard(state_mutx);
 
+
     if (state_e::NOT_INITIALISED == _state)
     {
         status = esp_netif_init();
+
         if (ESP_OK == status)
         {
             const esp_netif_t* const p_netif = esp_netif_create_default_wifi_sta();
             if (!p_netif) status = ESP_FAIL;
         }
-
+        std::cout << status << std::endl;
         if (ESP_OK == status)
         {
             status = esp_wifi_init(&wifi_init_config);
+            std::cout << status<< std::endl;
         }
-
         if (ESP_OK == status)
         {
-            status = esp_event_handler_instance_register(WIFI_EVENT,
+            status = esp_event_loop_create_default();
+            std::cout << status<< std::endl;
+        }
+        if (ESP_OK == status)
+        {
+            status = esp_event_handler_register(WIFI_EVENT,
                                                             ESP_EVENT_ANY_ID,
                                                             &wifi_event_handler,
-                                                            nullptr,
-                                                            nullptr);
-        }
+                                                            nullptr
+                                                            );
 
+        }
+        std::cout << status<< std::endl;
         if (ESP_OK == status)
         {
-            status = esp_event_handler_instance_register(IP_EVENT,
+            status = esp_event_handler_register(IP_EVENT,
                                                             ESP_EVENT_ANY_ID,
                                                             &ip_event_handler,
-                                                            nullptr,
-                                                            nullptr);
-        }
+                                                            nullptr
+                                                            );
 
+        }
+        std::cout << status<< std::endl;
         if (ESP_OK == status)
         {
             status = esp_wifi_set_mode(WIFI_MODE_STA);
+
         }
-        
+        std::cout << status<< std::endl;
         if (ESP_OK == status)
         {
             const size_t ssid_len_to_copy       = std::min(strlen(ssid), 
@@ -185,11 +188,13 @@ esp_err_t Wifi::_init(void)
             wifi_config.sta.pmf_cfg.required    = false;
 
             status = esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+
         }
         
         if (ESP_OK == status)
         {
             status = esp_wifi_start();
+
         }
 
         if (ESP_OK == status)

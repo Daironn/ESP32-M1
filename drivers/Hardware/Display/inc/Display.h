@@ -19,7 +19,7 @@
 
 #include "DisplaySettings.h"
 #include "Button.h"
-// #include "Scroll.h"
+#include "Scroll.h"
 
 /**
 

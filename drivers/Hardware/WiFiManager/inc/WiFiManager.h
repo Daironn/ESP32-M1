@@ -1,7 +1,7 @@
 #pragma once
 
 #include "esp_wifi.h"
-#include "esp_event.h"
+#include "esp_event_loop.h"
 #include "esp_log.h"
 
 #include <algorithm>
@@ -9,11 +9,11 @@
 
 #include <cstring>
 
-class Wifi
+class WiFiManager
 {
     constexpr static const char* _log_tag{"WiFi"};
-    constexpr static const char* ssid{"GreenGiant-TEST"};
-    constexpr static const char* password{"GreenGiant"};
+    constexpr static const char* ssid{"XXX"};
+    constexpr static const char* password{"XXX"};
 
 public:
 
@@ -30,8 +30,8 @@ public:
     };
 
 
-    Wifi(void) = default;
-    ~Wifi(void) = default;
+    WiFiManager(void) = default;
+    ~WiFiManager(void) = default;
 
     esp_err_t init(void);
     esp_err_t begin(void);
@@ -40,8 +40,8 @@ public:
 
 private:
     static esp_err_t _init(void);
-    static wifi_init_config_t wifi_init_config;
-    static wifi_config_t wifi_config;
+    inline static wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
+    inline static wifi_config_t wifi_config{};
 
     static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data);
@@ -49,9 +49,10 @@ private:
                                     int32_t event_id, void* event_data);
     static void ip_event_handler(void* arg, esp_event_base_t event_base,
                                     int32_t event_id, void* event_data);
-
-    static state_e _state;
-
-    static std::mutex connect_mutx; ///< Connect mutex
-    static std::mutex state_mutx;   ///< State change mutex
+public:
+    inline static state_e _state {state_e::NOT_INITIALISED};
+private:
+    inline static std::mutex connect_mutx {}; ///< Connect mutex
+    inline static std::mutex state_mutx {};   ///< State change mutex
+    inline static std::mutex init_mutx {};   ///< State change mutex
 };

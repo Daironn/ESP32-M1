@@ -73,6 +73,7 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "optional": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "esp_event.h": "c"
     }
 }
